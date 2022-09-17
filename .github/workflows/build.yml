@@ -1,0 +1,32 @@
+name: Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        required: true
+        default: 0.21.3
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out Pyodide
+        run: |
+          git clone -b ${{ github.event.inputs.tag }} --single-branch --depth=1 https://github.com/pyodide/pyodide
+
+      - name: Patch Pyodide to enable SDL2
+        run: |
+          cd pyodide
+          sed -i -e "s/\\(-s MAIN_MODULE=1\\)/\\1 -s USE_SDL=2 -s GL_WORKAROUND_SAFARI_GETCONTEXT_BUG=0/" Makefile.envs
+          sed -i -e "s/\\(= Hiwire;\\)/\\1 Module.canvas = document.querySelector('canvas#canvas');/" src/core/pre.js
+
+      - name: Build Pyodide-SDL2
+          cd pyodide
+          ./run_docker make
+
+      - name: Upload distribution
+        uses: actions/upload-artifact@v3
+        with:
+          name: pyodide-sdl2-${{ github.event.inputs.tag }}
+          path: dist/*
