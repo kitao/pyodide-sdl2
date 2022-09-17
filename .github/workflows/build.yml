@@ -22,6 +22,7 @@ jobs:
           sed -i -e "s/\\(= Hiwire;\\)/\\1 Module.canvas = document.querySelector('canvas#canvas');/" src/core/pre.js
 
       - name: Build Pyodide-SDL2
+        run: |
           cd pyodide
           ./run_docker make
 
