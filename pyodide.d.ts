@@ -524,6 +524,8 @@ export declare type ConfigType = {
 	stdout?: (msg: string) => void;
 	stderr?: (msg: string) => void;
 	jsglobals?: object;
+	args: string[];
+	_node_mounts: string[];
 };
 /**
  * Load the main Pyodide wasm module and initialize it.
@@ -558,8 +560,8 @@ export declare function loadPyodide(options?: {
 	 */
 	homedir?: string;
 	/** Load the full Python standard library.
-	 * Setting this to false excludes following modules: distutils.
-	 * Default: true
+	 * Setting this to false excludes unvendored modules from the standard library.
+	 * Default: false
 	 */
 	fullStdLib?: boolean;
 	/**
@@ -577,6 +579,8 @@ export declare function loadPyodide(options?: {
 	 */
 	stderr?: (msg: string) => void;
 	jsglobals?: object;
+	args?: string[];
+	_node_mounts?: string[];
 }): Promise<PyodideInterface>;
 
 export {};
