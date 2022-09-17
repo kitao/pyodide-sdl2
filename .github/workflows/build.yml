@@ -30,4 +30,4 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: pyodide-sdl2-${{ github.event.inputs.tag }}
-          path: dist/*
+          path: pyodide/dist/*
