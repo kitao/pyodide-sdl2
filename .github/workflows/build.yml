@@ -18,8 +18,8 @@ jobs:
       - name: Patch Pyodide to enable SDL2
         run: |
           cd pyodide
-          sed -i -e "s/\\(-s MAIN_MODULE=1\\)/\\1 -s USE_SDL=2 -s GL_WORKAROUND_SAFARI_GETCONTEXT_BUG=0/" Makefile.envs
-          sed -i -e "s/\\(= Hiwire;\\)/\\1 Module.canvas = document.querySelector('canvas#canvas');/" src/core/pre.js
+          sed -i "" -e "s/\\(-s MAIN_MODULE=1\\)/\\1 -s USE_SDL=2 -s GL_WORKAROUND_SAFARI_GETCONTEXT_BUG=0/" Makefile.envs
+          sed -i "" -e "s/\\(= Hiwire;\\)/\\1 Module.canvas = document.querySelector('canvas#canvas');/" src/core/pre.js
 
       - name: Build Pyodide-SDL2
         run: |
