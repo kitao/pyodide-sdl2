@@ -20,6 +20,7 @@ jobs:
           cd pyodide
           sed -i "" -e "s/\\(-s MAIN_MODULE=1\\)/\\1 -s USE_SDL=2 -s GL_WORKAROUND_SAFARI_GETCONTEXT_BUG=0/" Makefile.envs
           sed -i "" -e "s/\\(= Hiwire;\\)/\\1 Module.canvas = document.querySelector('canvas#canvas');/" src/core/pre.js
+          sed -i "" -e "s/\\(fatal_error = function.*\\)/\\1 if (e.message === 'unwind') { throw e; }/" src/core/error_handling.ts
 
       - name: Build Pyodide-SDL2
         run: |
