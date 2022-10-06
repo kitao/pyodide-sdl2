@@ -25,7 +25,7 @@ jobs:
       - name: Build Pyodide-SDL2
         run: |
           cd pyodide
-          ./run_docker --non-interactive make
+          ./run_docker --non-interactive PYODIDE_PACKAGES="*" make
 
       - name: Upload distribution
         uses: actions/upload-artifact@v3
