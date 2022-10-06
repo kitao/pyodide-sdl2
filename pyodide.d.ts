@@ -536,7 +536,11 @@ export declare class PyBuffer {
 	 */
 	release(): void;
 }
-declare function loadPackage(names: string | PyProxy | Array<string>, messageCallback?: (msg: string) => void, errorCallback?: (msg: string) => void): Promise<void>;
+declare function loadPackage(names: string | PyProxy | Array<string>, options?: {
+	messageCallback?: (message: string) => void;
+	errorCallback?: (message: string) => void;
+	checkIntegrity?: boolean;
+}, errorCallbackDeprecated?: (message: string) => void): Promise<void>;
 declare let loadedPackages: {
 	[key: string]: string;
 };
@@ -555,7 +559,11 @@ declare let globals: PyProxy;
 declare function runPython(code: string, options?: {
 	globals?: PyProxy;
 }): any;
-declare function loadPackagesFromImports(code: string, messageCallback?: (msg: string) => void, errorCallback?: (err: string) => void): Promise<void>;
+declare function loadPackagesFromImports(code: string, options?: {
+	messageCallback?: (message: string) => void;
+	errorCallback?: (message: string) => void;
+	checkIntegrity?: boolean;
+}, errorCallbackDeprecated?: (message: string) => void): Promise<void>;
 declare function runPythonAsync(code: string, options?: {
 	globals?: PyProxy;
 }): Promise<any>;
@@ -577,6 +585,14 @@ declare function pyimport(mod_name: string): PyProxy;
 declare function unpackArchive(buffer: TypedArray | ArrayBuffer, format: string, options?: {
 	extractDir?: string;
 }): void;
+declare type NativeFS = {
+	syncfs: Function;
+};
+declare function mountNativeFS(path: string, fileSystemHandle: {
+	isSameEntry: Function;
+	queryPermission: Function;
+	requestPermission: Function;
+}): Promise<NativeFS>;
 declare function setInterruptBuffer(interrupt_buffer: TypedArray): void;
 declare function checkInterrupt(): void;
 export declare type PyodideInterface = {
@@ -599,6 +615,7 @@ export declare type PyodideInterface = {
 	toPy: typeof toPy;
 	pyimport: typeof pyimport;
 	unpackArchive: typeof unpackArchive;
+	mountNativeFS: typeof mountNativeFS;
 	registerComlink: typeof registerComlink;
 	PythonError: typeof PythonError;
 	PyBuffer: typeof PyBuffer;
