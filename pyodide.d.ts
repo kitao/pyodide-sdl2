@@ -14,7 +14,7 @@ declare type PyProxyCache = {
 	refcnt: number;
 	leaked?: boolean;
 };
-declare type PyProxyThisInfo = {
+declare type PyProxyProps = {
 	/**
 	 * captureThis tracks whether this should be passed as the first argument to
 	 * the Python function or not. We keep it false by default. To make a PyProxy
@@ -34,6 +34,7 @@ declare type PyProxyThisInfo = {
 	 * application. These are stored here.
 	 */
 	boundArgs: any[];
+	roundtrip: boolean;
 };
 export declare type PyProxy = PyProxyClass & {
 	[x: string]: any;
@@ -44,7 +45,7 @@ declare class PyProxyClass {
 		cache: PyProxyCache;
 		destroyed_msg?: string;
 	};
-	$$thisInfo: PyProxyThisInfo;
+	$$props: PyProxyProps;
 	$$flags: number;
 	/** @private */
 	constructor();
