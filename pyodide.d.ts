@@ -77,10 +77,15 @@ declare class PyProxyClass {
 	 * collected, however there is no guarantee that the finalizer will be run in
 	 * a timely manner so it is better to ``destroy`` the proxy explicitly.
 	 *
-	 * @param destroyed_msg The error message to print if use is attempted after
+	 * @param options
+	 * @param options.message The error message to print if use is attempted after
 	 *        destroying. Defaults to "Object has already been destroyed".
+	 *
 	 */
-	destroy(destroyed_msg?: string): void;
+	destroy(options?: {
+		message?: string;
+		destroyRoundtrip?: boolean;
+	}): void;
 	/**
 	 * Make a new PyProxy pointing to the same Python object.
 	 * Useful if the PyProxy is destroyed somewhere else.
@@ -553,8 +558,28 @@ declare class PythonError extends Error {
 	 * @private
 	 */
 	__error_address: number;
-	constructor(message: string, error_address: number);
+	/**
+	 * The Python type, e.g, ``RuntimeError`` or ``KeyError``.
+	 */
+	type: string;
+	constructor(type: string, message: string, error_address: number);
 }
+declare type InFuncType = () => null | undefined | string | ArrayBuffer | ArrayBufferView;
+declare function setStdin(options?: {
+	stdin?: InFuncType;
+	error?: boolean;
+	isatty?: boolean;
+}): void;
+declare function setStdout(options?: {
+	batched?: (a: string) => void;
+	raw?: (a: number) => void;
+	isatty?: boolean;
+}): void;
+declare function setStderr(options?: {
+	batched?: (a: string) => void;
+	raw?: (a: number) => void;
+	isatty?: boolean;
+}): void;
 declare let pyodide_py: PyProxy;
 declare let globals: PyProxy;
 declare function runPython(code: string, options?: {
@@ -620,6 +645,9 @@ export declare type PyodideInterface = {
 	registerComlink: typeof registerComlink;
 	PythonError: typeof PythonError;
 	PyBuffer: typeof PyBuffer;
+	setStdin: typeof setStdin;
+	setStdout: typeof setStdout;
+	setStderr: typeof setStderr;
 };
 declare let FS: any;
 declare let PATH: any;
@@ -644,12 +672,6 @@ export declare type ConfigType = {
 /**
  * Load the main Pyodide wasm module and initialize it.
  *
- * Only one copy of Pyodide can be loaded in a given JavaScript global scope
- * because Pyodide uses global variables to load packages. If an attempt is made
- * to load a second copy of Pyodide, :any:`loadPyodide` will throw an error.
- * (This can be fixed once `Firefox adopts support for ES6 modules in webworkers
- * <https://bugzilla.mozilla.org/show_bug.cgi?id=1247687>`_.)
- *
  * @returns The :ref:`js-api-pyodide` module.
  * @memberof globalThis
  * @async
@@ -673,7 +695,8 @@ export declare function loadPyodide(options?: {
 	 * The home directory which Pyodide will use inside virtual file system. Default: "/home/pyodide"
 	 */
 	homedir?: string;
-	/** Load the full Python standard library.
+	/**
+	 * Load the full Python standard library.
 	 * Setting this to false excludes unvendored modules from the standard library.
 	 * Default: false
 	 */
