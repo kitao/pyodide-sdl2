@@ -49,6 +49,9 @@ declare class PyProxyClass {
 	$$flags: number;
 	/** @private */
 	constructor();
+	/**
+	 * @private
+	 */
 	get [Symbol.toStringTag](): string;
 	/**
 	 * The name of the type of the object.
@@ -77,10 +80,15 @@ declare class PyProxyClass {
 	 * collected, however there is no guarantee that the finalizer will be run in
 	 * a timely manner so it is better to ``destroy`` the proxy explicitly.
 	 *
-	 * @param destroyed_msg The error message to print if use is attempted after
+	 * @param options
+	 * @param options.message The error message to print if use is attempted after
 	 *        destroying. Defaults to "Object has already been destroyed".
+	 *
 	 */
-	destroy(destroyed_msg?: string): void;
+	destroy(options?: {
+		message?: string;
+		destroyRoundtrip?: boolean;
+	}): void;
 	/**
 	 * Make a new PyProxy pointing to the same Python object.
 	 * Useful if the PyProxy is destroyed somewhere else.
@@ -553,8 +561,28 @@ declare class PythonError extends Error {
 	 * @private
 	 */
 	__error_address: number;
-	constructor(message: string, error_address: number);
+	/**
+	 * The Python type, e.g, ``RuntimeError`` or ``KeyError``.
+	 */
+	type: string;
+	constructor(type: string, message: string, error_address: number);
 }
+declare type InFuncType = () => null | undefined | string | ArrayBuffer | ArrayBufferView;
+declare function setStdin(options?: {
+	stdin?: InFuncType;
+	error?: boolean;
+	isatty?: boolean;
+}): void;
+declare function setStdout(options?: {
+	batched?: (a: string) => void;
+	raw?: (a: number) => void;
+	isatty?: boolean;
+}): void;
+declare function setStderr(options?: {
+	batched?: (a: string) => void;
+	raw?: (a: number) => void;
+	isatty?: boolean;
+}): void;
 declare let pyodide_py: PyProxy;
 declare let globals: PyProxy;
 declare function runPython(code: string, options?: {
@@ -589,11 +617,7 @@ declare function unpackArchive(buffer: TypedArray | ArrayBuffer, format: string,
 declare type NativeFS = {
 	syncfs: Function;
 };
-declare function mountNativeFS(path: string, fileSystemHandle: {
-	isSameEntry: Function;
-	queryPermission: Function;
-	requestPermission: Function;
-}): Promise<NativeFS>;
+declare function mountNativeFS(path: string, fileSystemHandle: FileSystemDirectoryHandle): Promise<NativeFS>;
 declare function setInterruptBuffer(interrupt_buffer: TypedArray): void;
 declare function checkInterrupt(): void;
 export declare type PyodideInterface = {
@@ -620,6 +644,9 @@ export declare type PyodideInterface = {
 	registerComlink: typeof registerComlink;
 	PythonError: typeof PythonError;
 	PyBuffer: typeof PyBuffer;
+	setStdin: typeof setStdin;
+	setStdout: typeof setStdout;
+	setStderr: typeof setStderr;
 };
 declare let FS: any;
 declare let PATH: any;
@@ -644,12 +671,6 @@ export declare type ConfigType = {
 /**
  * Load the main Pyodide wasm module and initialize it.
  *
- * Only one copy of Pyodide can be loaded in a given JavaScript global scope
- * because Pyodide uses global variables to load packages. If an attempt is made
- * to load a second copy of Pyodide, :any:`loadPyodide` will throw an error.
- * (This can be fixed once `Firefox adopts support for ES6 modules in webworkers
- * <https://bugzilla.mozilla.org/show_bug.cgi?id=1247687>`_.)
- *
  * @returns The :ref:`js-api-pyodide` module.
  * @memberof globalThis
  * @async
@@ -657,43 +678,56 @@ export declare type ConfigType = {
 export declare function loadPyodide(options?: {
 	/**
 	 * The URL from which Pyodide will load the main Pyodide runtime and
-	 * packages. Defaults to the url that pyodide is loaded from with the file
-	 * name (pyodide.js or pyodide.mjs) removed. It is recommended that you
-	 * leave this undefined, providing an incorrect value can cause broken
-	 * behavior.
+	 * packages. It is recommended that you leave this unchanged, providing an
+	 * incorrect value can cause broken behavior.
+	 *
+	 * Default: The url that Pyodide is loaded from with the file name
+	 * (``pyodide.js`` or ``pyodide.mjs``) removed.
 	 */
 	indexURL?: string;
 	/**
 	 * The URL from which Pyodide will load the Pyodide "repodata.json" lock
-	 * file. Defaults to ``${indexURL}/repodata.json``. You can produce custom
-	 * lock files with :any:`micropip.freeze`
+	 * file. You can produce custom lock files with :any:`micropip.freeze`.
+	 * Default: ``${indexURL}/repodata.json``
 	 */
 	lockFileURL?: string;
 	/**
-	 * The home directory which Pyodide will use inside virtual file system. Default: "/home/pyodide"
+	 * The home directory which Pyodide will use inside virtual file system.
+	 * Default: ``"/home/pyodide"``
 	 */
 	homedir?: string;
-	/** Load the full Python standard library.
-	 * Setting this to false excludes unvendored modules from the standard library.
-	 * Default: false
+	/**
+	 * Load the full Python standard library. Setting this to false excludes
+	 * unvendored modules from the standard library.
+	 * Default: ``false``
 	 */
 	fullStdLib?: boolean;
 	/**
-	 * Override the standard input callback. Should ask the user for one line of input.
+	 * Override the standard input callback. Should ask the user for one line of
+	 * input.
 	 */
 	stdin?: () => string;
 	/**
 	 * Override the standard output callback.
-	 * Default: undefined
 	 */
 	stdout?: (msg: string) => void;
 	/**
 	 * Override the standard error output callback.
-	 * Default: undefined
 	 */
 	stderr?: (msg: string) => void;
+	/**
+	 * The object that Pyodide will use for the ``js`` module.
+	 * Default: ``globalThis``
+	 */
 	jsglobals?: object;
+	/**
+	 * Command line arguments to pass to Python on startup.
+	 * Default: ``[]``
+	 */
 	args?: string[];
+	/**
+	 * @ignore
+	 */
 	_node_mounts?: string[];
 }): Promise<PyodideInterface>;
 
